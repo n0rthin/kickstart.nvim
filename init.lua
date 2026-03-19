@@ -1,7 +1,7 @@
 --[[
 
 =====================================================================
-==================== READ THIS BEFORE CONTINUING ====================
+=j================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
 ========                                    .-----.          ========
 ========         .----------------------.   | === |          ========
@@ -186,10 +186,10 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -199,6 +199,16 @@ vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left wind
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+-- Keybinds for moving code around
+vim.keymap.set('n', '<A-j>', ':m .+1<CR>', { desc = 'Move line down(n)' })
+vim.keymap.set('n', '<A-k>', ':m .-2<CR>', { desc = 'Move line up(n)' })
+vim.keymap.set('v', '<A-k>', ":m '<-2<CR>gv=gv", { desc = 'Move line up(v)' })
+vim.keymap.set('v', '<A-j>', ":m '>+1<CR>gv=gv", { desc = 'Move line down(v)' })
+
+-- Keybinds for faster moves
+vim.keymap.set('n', '<A-h>', '0', { desc = 'Move cursor to the beginning of line' })
+vim.keymap.set('n', '<A-l>', '$', { desc = 'Move cursor to the end of line' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -290,19 +300,26 @@ require('lazy').setup({
       require('which-key').setup()
 
       -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
-        ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>c', group = '[C]ode' },
+        { '<leader>c_', hidden = true },
+        { '<leader>d', group = '[D]ocument' },
+        { '<leader>d_', hidden = true },
+        --{ '<leader>h', group = 'Git [H]unk' },
+        --{ '<leader>h_', hidden = true },
+        { '<leader>r', group = '[R]ename' },
+        { '<leader>r_', hidden = true },
+        { '<leader>s', group = '[S]earch' },
+        { '<leader>s_', hidden = true },
+        { '<leader>t', group = '[T]oggle' },
+        { '<leader>t_', hidden = true },
+        { '<leader>w', group = '[W]orkspace' },
+        { '<leader>w_', hidden = true },
       }
       -- visual mode
-      require('which-key').register({
-        ['<leader>h'] = { 'Git [H]unk' },
-      }, { mode = 'v' })
+      -- require('which-key').add({
+      --   { '<leader>h', desc = 'Git [H]unk', mode = 'v' },
+      --   }, { mode = 'v' })
     end,
   },
 
@@ -575,9 +592,9 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
-        -- gopls = {},
-        -- pyright = {},
+        clangd = {},
+        gopls = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -585,9 +602,10 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        tsserver = {},
+        ts_ls = {},
         --
-
+        htmlbeautifier = {},
+        stylelint = {},
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
@@ -662,6 +680,9 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        html = { 'htmlbeautifier' },
+        xml = { 'xmllint' },
+        css = { 'stylelint' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -784,6 +805,19 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'miikanissi/modus-themes.nvim',
+    priority = 1001,
+    opts = {
+      transparent = false,
+    },
+    init = function()
+      vim.cmd [[colorscheme modus]]
+
+      -- You can configure highlights by doing something like:
+      -- vim.cmd.hi 'Comment gui=none'
+    end,
+  },
   { -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
@@ -792,16 +826,17 @@ require('lazy').setup({
     'folke/tokyonight.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     opts = {
+      enabled = false,
       transparent = true,
     },
     init = function()
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      -- vim.cmd.colorscheme 'tokyonight-night'
 
       -- You can configure highlights by doing something like:
-      vim.cmd.hi 'Comment gui=none'
+      -- vim.cmd.hi 'Comment gui=none'
     end,
   },
 
@@ -829,6 +864,7 @@ require('lazy').setup({
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
       --  and try some other statusline plugin
+      --[[
       local statusline = require 'mini.statusline'
       -- set use_icons to true if you have a Nerd Font
       statusline.setup { use_icons = vim.g.have_nerd_font }
@@ -840,6 +876,7 @@ require('lazy').setup({
       statusline.section_location = function()
         return '%2l:%-2v'
       end
+      --]]
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
@@ -849,7 +886,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc', 'javascript', 'typescript' },
+      ensure_installed = { 'bash', 'c', 'cpp', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc', 'javascript', 'typescript', 'css', 'go' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -875,6 +912,133 @@ require('lazy').setup({
       --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    end,
+  },
+  {
+    'm4xshen/hardtime.nvim',
+    dependencies = { 'MunifTanjim/nui.nvim', 'nvim-lua/plenary.nvim' },
+    opts = {
+      enabled = false,
+      disabled_keys = {
+        ['<Up>'] = {},
+        ['<Down>'] = {},
+        ['<Left>'] = {},
+        ['<Right>'] = {},
+      },
+    },
+  },
+  -- Identation highlight
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = 'ibl',
+    opts = {},
+    config = function()
+      require('ibl').setup {
+        debounce = 100,
+        indent = { char = '▏' },
+        whitespace = { highlight = { 'Whitespace', 'NonText' } },
+      }
+    end,
+  },
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+      local wk = require 'which-key'
+
+      harpoon.setup()
+
+      wk.add {
+        {
+          '<leader>h',
+          group = '[H]arpoon',
+        },
+        {
+          '<leader>ha',
+          function()
+            harpoon:list():add()
+          end,
+          desc = '[A]dd current file to list',
+        },
+        {
+          '<leader>ht',
+          function()
+            harpoon.ui:toggle_quick_menu(harpoon:list())
+          end,
+          desc = '[T]oggle [H]arpoon',
+        },
+
+        {
+          '<leader>hu',
+          function()
+            harpoon:list():select(1)
+          end,
+          desc = 'Switch to the first file in the list',
+        },
+        {
+          '<leader>hi',
+          function()
+            harpoon:list():select(2)
+          end,
+          desc = 'Switch to the second file in the list',
+        },
+        {
+          '<leader>ho',
+          function()
+            harpoon:list():select(3)
+          end,
+          desc = 'Switch to the third file in the list',
+        },
+        {
+          '<leader>hp',
+          function()
+            harpoon:list():select(4)
+          end,
+          desc = 'Switch to the fourth file in the list',
+        },
+
+        -- Toggle previous & next buffers stored within Harpoon list
+        {
+          '<leader>hh',
+          function()
+            harpoon:list():prev()
+          end,
+          desc = 'Switch to the previous file',
+        },
+        {
+          '<leader>hj',
+          function()
+            harpoon:list():next()
+          end,
+          desc = 'Switch to the next file',
+        },
+      }
+    end,
+  },
+  {
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    init = function()
+      require('lualine').setup {
+        options = {
+          --theme = 'base16',
+          --section_separators = { left = '▓▒░', right = '░▒▓' },
+          section_separators = { left = '▒░', right = '░▒' },
+          --section_separators = { left = '▇▅▃', right = '▃▅▇' },
+          component_separators = { left = '│', right = '│' },
+          --component_separators = { left = '╏', right = '╏' },
+        },
+        sections = {
+          lualine_a = { 'mode' },
+          lualine_b = { 'branch', 'diff', 'diagnostics' },
+          lualine_c = { 'filename', 'tabs' },
+          lualine_x = { 'encoding', 'fileformat', 'filetype' },
+          lualine_y = { 'progress' },
+          lualine_z = { 'location' },
+        },
+      }
     end,
   },
 
